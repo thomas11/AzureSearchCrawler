@@ -23,7 +23,7 @@ namespace AzureSearchCrawler
             _handler = handler;
         }
 
-        public async Task Crawl(string rootUri, int maxPages = 10)
+        public async Task Crawl(string rootUri, int maxPages)
         {
             PoliteWebCrawler crawler = new PoliteWebCrawler(CreateCrawlConfiguration(maxPages), null, null, null, null, null, null, null, null);
 

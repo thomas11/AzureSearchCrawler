@@ -9,8 +9,7 @@ This project is intended as a demo or a starting point for a real crawler. At a 
 
 - Create an Azure Search search service. If you're new to Azure Search, follow [this guide](https://docs.microsoft.com/en-us/azure/search/search-create-service-portal).
 - Create an index in your search service with three string fields: "id", "url", and "content". Make them searchable.
-- At the top of CrawlerMain.cs, fill in your search service information and the root URL of the site you'd like to crawl.
-- Run CrawlerMain, either from Visual Studio after opening the .sln file, or from the command line after compiling using msbuild.
+- Run CrawlerMain, either from Visual Studio after opening the .sln file, or from the command line after compiling using msbuild. You will need to pass a few command-line arguments, such as your search service information and the root URL of the site you'd like to crawl. Calling the program without arguments or with -h will list the arguments.
 
 
 # Howto: customize it for your project
