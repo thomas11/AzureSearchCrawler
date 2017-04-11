@@ -33,7 +33,7 @@ namespace AzureSearchCrawler
         protected void RemoveNodes(HtmlDocument doc, string xpath)
         {
             var nodes = SafeSelectNodes(doc, xpath).ToList();
-            Console.WriteLine("Removing {0} nodes matching {1}.", nodes.Count, xpath);
+            // Console.WriteLine("Removing {0} nodes matching {1}.", nodes.Count, xpath);
             foreach (var node in nodes)
             {
                 node.Remove();

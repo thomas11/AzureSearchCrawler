@@ -115,6 +115,7 @@
     <Compile Include="Crawler.cs" />
     <Compile Include="CrawlerMain.cs" />
     <Compile Include="CrawlHandler.cs" />
+    <Compile Include="MsDocsTextExtractor.cs" />
     <Compile Include="TextExtractor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

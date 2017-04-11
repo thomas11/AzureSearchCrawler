@@ -68,7 +68,7 @@ namespace AzureSearchCrawler
 
             Arguments arguments = p.Object;
 
-            var indexer = new AzureSearchIndexer(arguments.ServiceName, arguments.IndexName, arguments.AdminApiKey, new TextExtractor());
+            var indexer = new AzureSearchIndexer(arguments.ServiceName, arguments.IndexName, arguments.AdminApiKey, new MsDocsTextExtractor());
             var crawler = new Crawler(indexer);
             crawler.Crawl(arguments.RootUri, maxPages: arguments.MaxPagesToIndex).Wait();
 
