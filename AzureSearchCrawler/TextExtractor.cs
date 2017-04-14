@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 
 namespace AzureSearchCrawler
@@ -13,6 +14,9 @@ namespace AzureSearchCrawler
     /// </summary>
     public class TextExtractor
     {
+        private readonly Regex newlines = new Regex(@"(\r\n|\n)+");
+        private readonly Regex spaces = new Regex(@"[ \t]+");
+
         public virtual string ExtractText(HtmlDocument doc)
         {
             if (doc == null || doc.DocumentNode == null)
@@ -21,7 +25,19 @@ namespace AzureSearchCrawler
             }
 
             RemoveNodesOfType(doc, "script", "style", "svg", "path");
-            return ExtractTextFromFirstMatchingElement(doc, "//body");
+            string content = ExtractTextFromFirstMatchingElement(doc, "//body");
+            return NormalizeWhitespace(content);
+        }
+
+        protected string NormalizeWhitespace(string content)
+        {
+            if (content == null)
+            {
+                return null;
+            }
+
+            content = newlines.Replace(content, "\n");
+            return spaces.Replace(content, " ");
         }
 
         protected void RemoveNodesOfType(HtmlDocument doc, params string[] types)
