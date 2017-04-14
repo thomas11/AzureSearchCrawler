@@ -8,9 +8,9 @@ namespace AzureSearchCrawler
 {
     /// <summary>
     /// Extracts text content from a web page. The default implementation is very simple: it removes all script, style,
-    /// svg, and path tags, and then returns the InnerText of the page body.
+    /// svg, and path tags, and then returns the InnerText of the page body, with cleaned up whitespace.
     /// <para/>You can implement your own custom text extraction by overriding the ExtractText method. The protected
-    /// helper methods in this class might be useful.
+    /// helper methods in this class might be useful. GetCleanedUpTextForXpath is the easiest way to get started.
     /// </summary>
     public class TextExtractor
     {
@@ -19,13 +19,19 @@ namespace AzureSearchCrawler
 
         public virtual string ExtractText(HtmlDocument doc)
         {
+            return GetCleanedUpTextForXpath(doc, "//body");
+        }
+
+        public string GetCleanedUpTextForXpath(HtmlDocument doc, string xpath)
+        {
             if (doc == null || doc.DocumentNode == null)
             {
                 return null;
             }
 
             RemoveNodesOfType(doc, "script", "style", "svg", "path");
-            string content = ExtractTextFromFirstMatchingElement(doc, "//body");
+
+            string content = ExtractTextFromFirstMatchingElement(doc, xpath);
             return NormalizeWhitespace(content);
         }
 
