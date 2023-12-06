@@ -1,12 +1,15 @@
+using Abot2.Poco;
+using Azure;
+using Azure.Core.Serialization;
+using Azure.Search.Documents;
+using Azure.Search.Documents.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Abot.Poco;
-using Microsoft.Azure.Search;
-using Microsoft.Azure.Search.Models;
 
 namespace AzureSearchCrawler
 {
@@ -19,23 +22,38 @@ namespace AzureSearchCrawler
     {
         private const int IndexingBatchSize = 25;
 
-        private TextExtractor _textExtractor;
-        private ISearchIndexClient _indexClient;
+        private readonly TextExtractor _textExtractor;
+        private readonly SearchClient _indexClient;
 
-        private BlockingCollection<WebPage> _queue = new BlockingCollection<WebPage>();
-        private SemaphoreSlim indexingLock = new SemaphoreSlim(1, 1);
+        private readonly BlockingCollection<WebPage> _queue = [];
+        private readonly SemaphoreSlim indexingLock = new(1, 1);
 
-        public AzureSearchIndexer(string serviceName, string indexName, string adminApiKey, TextExtractor textExtractor)
+
+        public AzureSearchIndexer(string serviceEndPoint, string indexName, string adminApiKey, TextExtractor textExtractor)
         {
             _textExtractor = textExtractor;
 
-            SearchServiceClient serviceClient = new SearchServiceClient(serviceName, new SearchCredentials(adminApiKey));
-            _indexClient = serviceClient.Indexes.GetClient(indexName);
+            // Create serializer options to convert to camelCase
+            JsonSerializerOptions serializerOptions = new()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            SearchClientOptions clientOptions = new()
+            {
+                Serializer = new JsonObjectSerializer(serializerOptions)
+            };
+
+            // Create a client
+            Uri endpoint = new(serviceEndPoint);
+            AzureKeyCredential credential = new(adminApiKey);
+            _indexClient = new SearchClient(endpoint, indexName, credential, clientOptions);
+
         }
 
         public async Task PageCrawledAsync(CrawledPage crawledPage)
         {
-            string text = _textExtractor.ExtractText(crawledPage.HtmlDocument);
+            string text = _textExtractor.ExtractText(crawledPage.Content.Text);
             if (text == null)
             {
                 Console.WriteLine("No content for page {0}", crawledPage?.Uri.AbsoluteUri);
@@ -61,7 +79,7 @@ namespace AzureSearchCrawler
             }
         }
 
-        private async Task<DocumentIndexResult> IndexBatchIfNecessary()
+        private async Task<IndexDocumentsResult> IndexBatchIfNecessary()
         {
             await indexingLock.WaitAsync();
 
@@ -80,8 +98,7 @@ namespace AzureSearchCrawler
                 {
                     pages.Add(_queue.Take());
                 }
-                var batch = IndexBatch.MergeOrUpload(pages);
-                return await _indexClient.Documents.IndexAsync(batch);
+                return await _indexClient.MergeOrUploadDocumentsAsync(pages);
             }
             finally
             {
@@ -89,21 +106,13 @@ namespace AzureSearchCrawler
             }
         }
 
-        [SerializePropertyNamesAsCamelCase]
-        public class WebPage
+        public class WebPage(string url, string content)
         {
-            public WebPage(string url, string content)
-            {
-                Url = url;
-                Content = content;
-                Id = url.GetHashCode().ToString();
-            }
+            public string Id { get; } = url.GetHashCode().ToString();
 
-            public string Id { get; }
+            public string Url { get; } = url;
 
-            public string Url { get; }
-
-            public string Content { get; }
+            public string Content { get; } = content;
         }
     }
 }

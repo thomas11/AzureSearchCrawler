@@ -1,5 +1,5 @@
-using System;
 using Fclp;
+using System;
 
 namespace AzureSearchCrawler
 {
@@ -16,7 +16,7 @@ namespace AzureSearchCrawler
 
             public int MaxPagesToIndex { get; set; }
 
-            public string ServiceName { get; set; }
+            public string ServiceEndPoint { get; set; }
 
             public string IndexName { get; set; }
 
@@ -37,10 +37,10 @@ namespace AzureSearchCrawler
                 .SetDefault(DefaultMaxPagesToIndex)
                 .WithDescription("Stop after having indexed this many pages. Default is " + DefaultMaxPagesToIndex + "; 0 means no limit.");
 
-            p.Setup(arg => arg.ServiceName)
-                .As('s', "ServiceName")
+            p.Setup(arg => arg.ServiceEndPoint)
+                .As('s', "ServiceEndPoint")
                 .Required()
-                .WithDescription("The name of your Azure Search service");
+                .WithDescription("The Url (service end point) of your Azure Search service");
 
             p.Setup(arg => arg.IndexName)
                 .As('i', "IndexName")
@@ -68,7 +68,7 @@ namespace AzureSearchCrawler
 
             Arguments arguments = p.Object;
 
-            var indexer = new AzureSearchIndexer(arguments.ServiceName, arguments.IndexName, arguments.AdminApiKey, new TextExtractor());
+            var indexer = new AzureSearchIndexer(arguments.ServiceEndPoint, arguments.IndexName, arguments.AdminApiKey, new TextExtractor());
             var crawler = new Crawler(indexer);
             crawler.Crawl(arguments.RootUri, maxPages: arguments.MaxPagesToIndex).Wait();
 

@@ -1,8 +1,8 @@
+using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using HtmlAgilityPack;
 
 namespace AzureSearchCrawler
 {
@@ -12,13 +12,15 @@ namespace AzureSearchCrawler
     /// <para/>You can implement your own custom text extraction by overriding the ExtractText method. The protected
     /// helper methods in this class might be useful. GetCleanedUpTextForXpath is the easiest way to get started.
     /// </summary>
-    public class TextExtractor
+    public partial class TextExtractor
     {
-        private readonly Regex newlines = new Regex(@"(\r\n|\n)+");
-        private readonly Regex spaces = new Regex(@"[ \t]+");
+        private readonly Regex newlines = MyRegex();
+        private readonly Regex spaces = MyRegex1();
 
-        public virtual string ExtractText(HtmlDocument doc)
+        public virtual string ExtractText(string content)
         {
+            HtmlDocument doc = new();
+            doc.LoadHtml(content);
             return GetCleanedUpTextForXpath(doc, "//body");
         }
 
@@ -77,5 +79,10 @@ namespace AzureSearchCrawler
         {
             return doc.DocumentNode.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>();
         }
+
+        [GeneratedRegex(@"(\r\n|\n)+")]
+        private static partial Regex MyRegex();
+        [GeneratedRegex(@"[ \t]+")]
+        private static partial Regex MyRegex1();
     }
 }
