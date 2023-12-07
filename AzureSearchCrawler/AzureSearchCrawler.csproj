@@ -23,26 +23,14 @@
     <Copyright>Copyright ©  2017</Copyright>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
+    <StartupObject>AzureSearchCrawler.CrawlerMain</StartupObject>
   </PropertyGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.5.2 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Abot" Version="2.0.70" />
     <PackageReference Include="AngleSharp" Version="1.0.7" />
     <PackageReference Include="Azure.Search.Documents" Version="11.5.1" />
     <PackageReference Include="FluentCommandLineParser" Version="1.4.3" />
     <PackageReference Include="HtmlAgilityPack" Version="1.11.54" />
-    <PackageReference Include="log4net" Version="2.0.15" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  
   </ItemGroup>
 </Project>

@@ -54,6 +54,7 @@ namespace AzureSearchCrawler
         public async Task PageCrawledAsync(CrawledPage crawledPage)
         {
             string text = _textExtractor.ExtractText(crawledPage.Content.Text);
+            
             if (text == null)
             {
                 Console.WriteLine("No content for page {0}", crawledPage?.Uri.AbsoluteUri);

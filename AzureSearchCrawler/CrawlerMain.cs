@@ -9,12 +9,15 @@ namespace AzureSearchCrawler
     class CrawlerMain
     {
         private const int DefaultMaxPagesToIndex = 100;
+        private const int DefaultMaxCrawlDepth = 10;
 
         private class Arguments
         {
             public string RootUri { get; set; }
 
             public int MaxPagesToIndex { get; set; }
+
+            public int MaxCrawlDepth { get; set; }
 
             public string ServiceEndPoint { get; set; }
 
@@ -36,6 +39,11 @@ namespace AzureSearchCrawler
                 .As('m', "maxPages")
                 .SetDefault(DefaultMaxPagesToIndex)
                 .WithDescription("Stop after having indexed this many pages. Default is " + DefaultMaxPagesToIndex + "; 0 means no limit.");
+
+            p.Setup(arg => arg.MaxCrawlDepth)
+                  .As('d', "maxDepth")
+                  .SetDefault(DefaultMaxCrawlDepth)
+                  .WithDescription("Maximum crawl depth. Default is " + DefaultMaxCrawlDepth);
 
             p.Setup(arg => arg.ServiceEndPoint)
                 .As('s', "ServiceEndPoint")
@@ -70,9 +78,8 @@ namespace AzureSearchCrawler
 
             var indexer = new AzureSearchIndexer(arguments.ServiceEndPoint, arguments.IndexName, arguments.AdminApiKey, new TextExtractor());
             var crawler = new Crawler(indexer);
-            crawler.Crawl(arguments.RootUri, maxPages: arguments.MaxPagesToIndex).Wait();
+            crawler.Crawl(arguments.RootUri, maxPages: arguments.MaxPagesToIndex, maxDepth: arguments.MaxCrawlDepth).Wait();
 
-            Console.Read(); // keep console open until a button is pressed so we see the output
         }
     }
 }

@@ -22,9 +22,9 @@ namespace AzureSearchCrawler
             _handler = handler;
         }
 
-        public async Task Crawl(string rootUri, int maxPages)
+        public async Task Crawl(string rootUri, int maxPages, int maxDepth)
         {
-            PoliteWebCrawler crawler = new(CreateCrawlConfiguration(maxPages), null, null, null, null, null, null, null, null);
+            PoliteWebCrawler crawler = new(CreateCrawlConfiguration(maxPages, maxDepth), null, null, null, null, null, null, null, null);
 
             crawler.PageCrawlStarting += crawler_ProcessPageCrawlStarting;
             crawler.PageCrawlCompleted += crawler_ProcessPageCrawlCompleted;
@@ -70,7 +70,7 @@ namespace AzureSearchCrawler
             await _handler.PageCrawledAsync(crawledPage);
         }
 
-        private CrawlConfiguration CreateCrawlConfiguration(int maxPages)
+        private CrawlConfiguration CreateCrawlConfiguration(int maxPages, int maxDepth)
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
@@ -81,7 +81,9 @@ namespace AzureSearchCrawler
                 MinCrawlDelayPerDomainMilliSeconds = 100,
                 IsSslCertificateValidationEnabled = true,
                 MaxPagesToCrawl = maxPages,
-                
+                MaxCrawlDepth = maxDepth,
+                UserAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
             };
 
             return crawlConfig;
