@@ -1,10 +1,9 @@
+using Abot2.Crawler;
+using Abot2.Poco;
 using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Abot.Crawler;
-using Abot.Poco;
 
 namespace AzureSearchCrawler
 {
@@ -16,21 +15,21 @@ namespace AzureSearchCrawler
     {
         private static int PageCount = 0;
 
-        private CrawlHandler _handler;
+        private readonly CrawlHandler _handler;
 
         public Crawler(CrawlHandler handler)
         {
             _handler = handler;
         }
 
-        public async Task Crawl(string rootUri, int maxPages)
+        public async Task Crawl(string rootUri, int maxPages, int maxDepth)
         {
-            PoliteWebCrawler crawler = new PoliteWebCrawler(CreateCrawlConfiguration(maxPages), null, null, null, null, null, null, null, null);
+            PoliteWebCrawler crawler = new(CreateCrawlConfiguration(maxPages, maxDepth), null, null, null, null, null, null, null, null);
 
-            crawler.PageCrawlStartingAsync += crawler_ProcessPageCrawlStarting;
-            crawler.PageCrawlCompletedAsync += crawler_ProcessPageCrawlCompleted;
+            crawler.PageCrawlStarting += crawler_ProcessPageCrawlStarting;
+            crawler.PageCrawlCompleted += crawler_ProcessPageCrawlCompleted;
 
-            CrawlResult result = crawler.Crawl(new Uri(rootUri)); //This is synchronous, it will not go to the next line until the crawl has completed
+            CrawlResult result = await crawler.CrawlAsync(new Uri(rootUri)); //This is synchronous, it will not go to the next line until the crawl has completed
             if (result.ErrorOccurred)
             {
                 Console.WriteLine("Crawl of {0} ({1} pages) completed with error: {2}", result.RootUri.AbsoluteUri, PageCount, result.ErrorException.Message);
@@ -56,9 +55,9 @@ namespace AzureSearchCrawler
             CrawledPage crawledPage = e.CrawledPage;
             string uri = crawledPage.Uri.AbsoluteUri;
 
-            if (crawledPage.WebException != null || crawledPage.HttpWebResponse?.StatusCode != HttpStatusCode.OK)
+            if (crawledPage.HttpRequestException != null || crawledPage.HttpResponseMessage?.StatusCode != HttpStatusCode.OK)
             {
-                Console.WriteLine("Crawl of page failed {0}: exception '{1}', response status {2}", uri, crawledPage.WebException?.Message, crawledPage.HttpWebResponse?.StatusCode);
+                Console.WriteLine("Crawl of page failed {0}: exception '{1}', response status {2}", uri, crawledPage.HttpRequestException?.Message, crawledPage.HttpResponseMessage?.StatusCode);
                 return;
             }
 
@@ -71,17 +70,21 @@ namespace AzureSearchCrawler
             await _handler.PageCrawledAsync(crawledPage);
         }
 
-        private CrawlConfiguration CreateCrawlConfiguration(int maxPages)
+        private CrawlConfiguration CreateCrawlConfiguration(int maxPages, int maxDepth)
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
-            CrawlConfiguration crawlConfig = new CrawlConfiguration();
-            crawlConfig.CrawlTimeoutSeconds = maxPages * 10;
-            crawlConfig.MaxConcurrentThreads = 5;
-            crawlConfig.MinCrawlDelayPerDomainMilliSeconds = 100;
-            crawlConfig.IsSslCertificateValidationEnabled = true;
+            CrawlConfiguration crawlConfig = new()
+            {
+                CrawlTimeoutSeconds = maxPages * 10,
+                MaxConcurrentThreads = 5,
+                MinCrawlDelayPerDomainMilliSeconds = 100,
+                IsSslCertificateValidationEnabled = true,
+                MaxPagesToCrawl = maxPages,
+                MaxCrawlDepth = maxDepth,
+                UserAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-            crawlConfig.MaxPagesToCrawl = maxPages;
+            };
 
             return crawlConfig;
         }
