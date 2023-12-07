@@ -18,7 +18,7 @@ namespace AzureSearchCrawler
     /// <para/>To customize what text is extracted and indexed from each page, you implement a custom TextExtractor
     /// and pass it in.
     /// </summary>
-    class AzureSearchIndexer : CrawlHandler
+    partial class AzureSearchIndexer : CrawlHandler
     {
         private const int IndexingBatchSize = 25;
 
@@ -53,7 +53,9 @@ namespace AzureSearchCrawler
 
         public async Task PageCrawledAsync(CrawledPage crawledPage)
         {
-            string text = _textExtractor.ExtractText(crawledPage.Content.Text);
+            var page = _textExtractor.ExtractText(crawledPage.Content.Text);
+            string text = page["content"];
+            string title = page["title"];
             
             if (text == null)
             {
@@ -61,7 +63,7 @@ namespace AzureSearchCrawler
                 return;
             }
 
-            _queue.Add(new WebPage(crawledPage.Uri.AbsoluteUri, text));
+            _queue.Add(new WebPage(crawledPage.Uri.AbsoluteUri, title, text));
 
             if (_queue.Count > IndexingBatchSize)
             {
@@ -105,15 +107,6 @@ namespace AzureSearchCrawler
             {
                 indexingLock.Release();
             }
-        }
-
-        public class WebPage(string url, string content)
-        {
-            public string Id { get; } = url.GetHashCode().ToString();
-
-            public string Url { get; } = url;
-
-            public string Content { get; } = content;
         }
     }
 }
