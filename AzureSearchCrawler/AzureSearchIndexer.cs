@@ -24,12 +24,13 @@ namespace AzureSearchCrawler
 
         private readonly TextExtractor _textExtractor;
         private readonly SearchClient _indexClient;
+        private readonly bool _extractText;
 
         private readonly BlockingCollection<WebPage> _queue = [];
         private readonly SemaphoreSlim indexingLock = new(1, 1);
 
 
-        public AzureSearchIndexer(string serviceEndPoint, string indexName, string adminApiKey, TextExtractor textExtractor)
+        public AzureSearchIndexer(string serviceEndPoint, string indexName, string adminApiKey,  bool extractText, TextExtractor textExtractor)
         {
             _textExtractor = textExtractor;
 
@@ -48,12 +49,13 @@ namespace AzureSearchCrawler
             Uri endpoint = new(serviceEndPoint);
             AzureKeyCredential credential = new(adminApiKey);
             _indexClient = new SearchClient(endpoint, indexName, credential, clientOptions);
+            _extractText = extractText;
 
         }
 
         public async Task PageCrawledAsync(CrawledPage crawledPage)
         {
-            var page = _textExtractor.ExtractText(crawledPage.Content.Text);
+            var page = _textExtractor.ExtractText(_extractText, crawledPage.Content.Text);
             string text = page["content"];
             string title = page["title"];
             

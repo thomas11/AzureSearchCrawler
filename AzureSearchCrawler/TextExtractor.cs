@@ -17,13 +17,19 @@ namespace AzureSearchCrawler
         private readonly Regex newlines = MyRegex();
         private readonly Regex spaces = MyRegex1();
 
-        public virtual Dictionary<string, string> ExtractText(string content)
+        public virtual Dictionary<string, string> ExtractText(bool extractText, string content)
         {
             HtmlDocument doc = new();
             doc.LoadHtml(content);
+            string body;
+            if (extractText)
+                body = GetCleanedUpTextForXpath(doc, "//body");
+            else
+                body = doc.DocumentNode.SelectSingleNode("//body").InnerHtml;
+
             Dictionary<string, string> page = new()
             {
-                { "content", GetCleanedUpTextForXpath(doc, "//body") },
+                { "content", body },
                 { "title", doc.DocumentNode.SelectSingleNode("//title").InnerText }
             };
             return page;
