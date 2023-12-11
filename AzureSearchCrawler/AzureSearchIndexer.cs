@@ -18,18 +18,19 @@ namespace AzureSearchCrawler
     /// <para/>To customize what text is extracted and indexed from each page, you implement a custom TextExtractor
     /// and pass it in.
     /// </summary>
-    class AzureSearchIndexer : CrawlHandler
+    partial class AzureSearchIndexer : CrawlHandler
     {
         private const int IndexingBatchSize = 25;
 
         private readonly TextExtractor _textExtractor;
         private readonly SearchClient _indexClient;
+        private readonly bool _extractText;
 
         private readonly BlockingCollection<WebPage> _queue = [];
         private readonly SemaphoreSlim indexingLock = new(1, 1);
 
 
-        public AzureSearchIndexer(string serviceEndPoint, string indexName, string adminApiKey, TextExtractor textExtractor)
+        public AzureSearchIndexer(string serviceEndPoint, string indexName, string adminApiKey,  bool extractText, TextExtractor textExtractor)
         {
             _textExtractor = textExtractor;
 
@@ -48,12 +49,15 @@ namespace AzureSearchCrawler
             Uri endpoint = new(serviceEndPoint);
             AzureKeyCredential credential = new(adminApiKey);
             _indexClient = new SearchClient(endpoint, indexName, credential, clientOptions);
+            _extractText = extractText;
 
         }
 
         public async Task PageCrawledAsync(CrawledPage crawledPage)
         {
-            string text = _textExtractor.ExtractText(crawledPage.Content.Text);
+            var page = _textExtractor.ExtractText(_extractText, crawledPage.Content.Text);
+            string text = page["content"];
+            string title = page["title"];
             
             if (text == null)
             {
@@ -61,7 +65,7 @@ namespace AzureSearchCrawler
                 return;
             }
 
-            _queue.Add(new WebPage(crawledPage.Uri.AbsoluteUri, text));
+            _queue.Add(new WebPage(crawledPage.Uri.AbsoluteUri, title, text));
 
             if (_queue.Count > IndexingBatchSize)
             {
@@ -105,15 +109,6 @@ namespace AzureSearchCrawler
             {
                 indexingLock.Release();
             }
-        }
-
-        public class WebPage(string url, string content)
-        {
-            public string Id { get; } = url.GetHashCode().ToString();
-
-            public string Url { get; } = url;
-
-            public string Content { get; } = content;
         }
     }
 }

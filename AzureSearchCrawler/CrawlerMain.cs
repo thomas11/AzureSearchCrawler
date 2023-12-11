@@ -24,6 +24,8 @@ namespace AzureSearchCrawler
             public string IndexName { get; set; }
 
             public string AdminApiKey { get; set; }
+
+            public bool ExtractText { get; set; }
         }
 
         static void Main(string[] args)
@@ -59,6 +61,11 @@ namespace AzureSearchCrawler
                 .As('a', "AdminApiKey")
                 .Required();
 
+            p.Setup(arg => arg.ExtractText)
+                .As('e', "ExtractText")
+                .SetDefault(true)
+                .WithDescription("Extract text from the body or store HTML as is. Default = true");
+
             p.SetupHelp("?", "h", "help").Callback(text => Console.Error.WriteLine(text));
 
             ICommandLineParserResult result = p.Parse(args);
@@ -76,7 +83,7 @@ namespace AzureSearchCrawler
 
             Arguments arguments = p.Object;
 
-            var indexer = new AzureSearchIndexer(arguments.ServiceEndPoint, arguments.IndexName, arguments.AdminApiKey, new TextExtractor());
+            var indexer = new AzureSearchIndexer(arguments.ServiceEndPoint, arguments.IndexName, arguments.AdminApiKey, arguments.ExtractText, new TextExtractor());
             var crawler = new Crawler(indexer);
             crawler.Crawl(arguments.RootUri, maxPages: arguments.MaxPagesToIndex, maxDepth: arguments.MaxCrawlDepth).Wait();
 

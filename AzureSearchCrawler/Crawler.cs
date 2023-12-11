@@ -47,7 +47,7 @@ namespace AzureSearchCrawler
             Interlocked.Increment(ref PageCount);
 
             PageToCrawl pageToCrawl = e.PageToCrawl;
-            Console.WriteLine("{0}  found on  {1}", pageToCrawl.Uri.AbsoluteUri, pageToCrawl.ParentUri.AbsoluteUri);
+            Console.WriteLine("{0}  found on  {1}, Depth: {2}", pageToCrawl.Uri.AbsoluteUri, pageToCrawl.ParentUri.AbsoluteUri, pageToCrawl.CrawlDepth);
         }
 
         async void crawler_ProcessPageCrawlCompleted(object sender, PageCrawlCompletedArgs e)
